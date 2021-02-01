@@ -1,5 +1,5 @@
 import "./App.css";
-import { useFetch } from "./src/packages/OnePointSDK";
+import { useFetch } from "@fozg/one-point-sdk";
 import { OP } from "./src/services/OP";
 import Hightlight from "react-highlight.js";
 import { useEffect, useState } from "react";
@@ -99,7 +99,7 @@ export default App;
 
 const styles = {
   layout: {
-    height: "100vh",
+    height: "calc(100vh - 50px)",
     width: "100vw",
     display: "flex",
     flexDirection: "row",
@@ -120,7 +120,7 @@ const styles = {
   },
   right: {
     width: "100%",
-    height: "100vh",
+    height: "100%",
     overflowY: "auto",
   },
   card: {
