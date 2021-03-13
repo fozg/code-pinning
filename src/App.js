@@ -2,38 +2,57 @@ import "./App.css";
 import { useFetch } from "@fozg/one-point-sdk";
 import { OP } from "./src/services/OP";
 import Hightlight from "react-highlight.js";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
+import useClickOutside from "./hooks/useClickOutside";
 
 function App() {
   const { data, loading, recall } = useFetch(() =>
     OP.getAppByName("code_pins").getListByName("pins").getItems()
   );
+  const [modal, setModal] = useState(false);
 
   useEffect(() => {
     if (data.length) {
       var grid = document.querySelector(".pinlists");
       new window.Masonry(grid, {
         itemSelector: ".pinItem",
-        columnWidth: 620,
+        columnWidth: 610,
         horizontalOrder: true,
       });
     }
   }, [data]);
 
   return (
-    <div style={styles.layout}>
-      <div style={styles.left}>
-        <AddZone onAdded={recall} />
-      </div>
-      {loading && (
-        <div class="lds-ripple">
-          <div></div>
-          <div></div>
-        </div>
+    <div>
+      {modal && (
+        <AddZone
+          onClose={() => {
+            setModal(false);
+          }}
+          onAdded={() => {
+            setModal(false);
+            recall();
+          }}
+        />
       )}
       <div style={styles.right}>
         <div style={styles.pinslist} className="pinlists">
+          <div className="pinItem" style={{ ...styles.card, padding: 0 }}>
+            <button
+              onClick={() => {
+                setModal(true);
+              }}
+            >
+              New pin
+            </button>
+          </div>
+          {loading && (
+            <div class="lds-ripple">
+              <div></div>
+              <div></div>
+            </div>
+          )}
           {data
             .sort(
               (a, b) =>
@@ -47,7 +66,9 @@ function App() {
                     <span style={styles.language}>{pin.languages?.name}</span>
                   )}
                 </div>
-                <Hightlight language="javascript">{pin.snippet}</Hightlight>
+                <div style={{ margin: 10 }}>
+                  <Hightlight language="javascript">{pin.snippet}</Hightlight>
+                </div>
               </div>
             ))}
         </div>
@@ -57,9 +78,12 @@ function App() {
   );
 }
 
-const AddZone = ({ onAdded }) => {
+const AddZone = ({ onAdded, onClose }) => {
   const [title, setTitle] = useState("");
   const [snippet, setSnippet] = useState("");
+  const ref = useRef();
+
+  useClickOutside(ref, () => onClose());
 
   const onSubmit = () => {
     if (!title.trim() || !snippet.trim()) {
@@ -83,14 +107,23 @@ const AddZone = ({ onAdded }) => {
       });
   };
   return (
-    <div>
-      <input value={title} onChange={(e) => setTitle(e.target.value)} />
-      <textarea
-        rows={20}
-        value={snippet}
-        onChange={(e) => setSnippet(e.target.value)}
-      ></textarea>
-      <button onClick={onSubmit}>Submit</button>
+    <div style={styles.modal}>
+      <div style={styles.modalWrapper} ref={ref}>
+        <div style={styles.header}>New pin</div>
+        <input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Description"
+        />
+        <textarea
+          style={{ fontFamily: "monospace" }}
+          placeholder="Your code"
+          rows={20}
+          value={snippet}
+          onChange={(e) => setSnippet(e.target.value)}
+        ></textarea>
+        <button onClick={onSubmit}>Submit</button>
+      </div>
     </div>
   );
 };
@@ -100,9 +133,6 @@ export default App;
 const styles = {
   layout: {
     height: "calc(100vh - 50px)",
-    width: "100vw",
-    display: "flex",
-    flexDirection: "row",
   },
   left: {
     width: 500,
@@ -124,7 +154,7 @@ const styles = {
     overflowY: "auto",
   },
   card: {
-    width: 600,
+    width: 590,
     float: "left",
     padding: "10px 0 0",
     background: "rgb(40 44 52)",
@@ -137,7 +167,7 @@ const styles = {
     fontSize: 14,
     color: "#eee",
     fontWeight: 500,
-    padding: "0 10px 10px",
+    padding: "0 20px 10px",
     borderBottom: "1px solid #111",
     display: "flex",
     flexDirection: "row",
@@ -150,5 +180,29 @@ const styles = {
     fontSize: 12,
     padding: "1px 5px",
     borderRadius: 20,
+  },
+  modal: {
+    position: "fixed",
+    top: 0,
+    bottom: 0,
+    right: 0,
+    left: 0,
+    background: "rgba(0,0,0,.3)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 100,
+  },
+  modalWrapper: {
+    background: "rgb(22 22 22)",
+    padding: 20,
+    boxShadow: "0 5px 15px rgba(0,0,0,.1)",
+    borderRadius: 15,
+  },
+  header: {
+    fontSize: 16,
+    color: "#fff",
+    fontWeight: 500,
+    marginBottom: 20,
   },
 };
